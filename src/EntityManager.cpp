@@ -31,7 +31,7 @@ void EntityManager::deleteEntities()
 void EntityManager::update()
 {
 
-	for (auto e : m_toAdd) {
+	for (auto& e : m_toAdd) {
 
 		m_entities.push_back(e);
 		m_entityMap[e->tag()].push_back(e);

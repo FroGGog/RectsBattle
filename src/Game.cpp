@@ -4,7 +4,7 @@ Game::Game()
 {
 	init();
 
-	enemySpawner = clock.getElapsedTime();
+	initPlayer();
 
 }
 
@@ -16,6 +16,7 @@ void Game::update()
 	m_entities.update();
 
 	sSpawnEnimes();
+	sInput();
 	sMovement();
 	sCollision();
 
@@ -31,6 +32,20 @@ void Game::init()
 {
 	m_window.create(sf::VideoMode{ 1280, 720 }, "Assigment2", sf::Style::Close);
 	m_window.setFramerateLimit(60);
+}
+
+void Game::initPlayer()
+{
+
+	auto e = m_entities.addEntity("Player");
+
+	e->cShape = std::make_shared<CShape>(30.f, 9, Vec2<float>{(float)(m_window.getSize().x / 2),(float)(m_window.getSize().y / 2)},
+		sf::Color::Red, sf::Color::Cyan, 3.f);
+	e->cTransform = std::make_shared<CTransform>(Vec2<float>{e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y},
+		Vec2<float>{5.f, 5.f}, Vec2<float>{1, 1}, 5.f);
+	e->cInput = std::make_shared<CInput>();
+	
+
 }
 
 void Game::sWindowEvents()
@@ -52,7 +67,8 @@ void Game::sRender()
 {
 	m_window.clear();
 
-	for (auto e : m_entities.getEntities("Enemy")) {
+	for (auto& e : m_entities.getEntities()) {
+		//maybe check if entity dont have cShape components
 		m_window.draw(e->cShape->shape);
 	}
 
@@ -69,11 +85,12 @@ void Game::sSpawnEnimes()
 		auto e = m_entities.addEntity("Enemy");
 
 		e->cTransform = std::make_shared<CTransform>(Vec2<float>{(float)(rand() % (m_window.getSize().x - 250) + 100), (float)(rand() % (m_window.getSize().y - 250) + 100)},
-			Vec2<float>{(float)(rand() % 10), (float)(rand() % 10)}, Vec2<float>{1, 1}, 5.f);
+			Vec2<float>{(float)((rand() % 8) + 2), (float)((rand() % 8) + 2)}, Vec2<float>{1, 1}, 5.f);
 		sf::Color color{ (sf::Uint8)(rand() % 255) , (sf::Uint8)(rand() % 255), (sf::Uint8)(rand() % 255) , 255};
-		e->cShape = std::make_shared<CShape>((float)((rand() % 50) + 15), (float)((rand() % 16) + 3), e->cTransform->pos, color, sf::Color::White, 2.f);
+		e->cShape = std::make_shared<CShape>((float)((rand() % 35) + 15), (float)((rand() % 16) + 3),
+			e->cTransform->pos, color, sf::Color::White, (float)((rand() % 5) + 2));
 
-		e->cLifeSpan = std::make_shared<CLifespan>((float)((rand() % 15) + 1));
+		e->cLifeSpan = std::make_shared<CLifespan>((float)((rand() % 20) + 5));
 
 		enemySpawner = clock.restart();
 
@@ -84,22 +101,43 @@ void Game::sSpawnEnimes()
 void Game::sMovement()
 {
 	// move objects 
-	for (auto e : m_entities.getEntities("Enemy")) {
+	for (auto& e : m_entities.getEntities("Enemy")) {
 
 		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
 		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
 
 	}
 
+	for (auto& e : m_entities.getEntities("Player")) {
+
+		if (e->cInput->RIGHT) {
+			e->cShape->shape.move(e->cTransform->speed.getCords().first, 0);
+		}
+		else if (e->cInput->LEFT) {
+			e->cShape->shape.move(e->cTransform->speed.getCords().first * -1.f, 0);
+		}
+
+		if (e->cInput->UP) {
+			e->cShape->shape.move(0, e->cTransform->speed.getCords().second * -1.f);
+		}
+		else if (e->cInput->DOWN) {
+			e->cShape->shape.move(0, e->cTransform->speed.getCords().second * 1.f);
+		}
+
+		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
+	}
+
 	//rotate objects
-	for (auto e : m_entities.getEntities("Enemy")) {
+	for (auto& e : m_entities.getEntities()) {
 
 		e->cShape->shape.rotate(e->cTransform->rotation);
 
 	}
 
+
+
 	//minus life span TODO get this to new system
-	for (auto e : m_entities.getEntities("Enemy")) {
+	for (auto& e : m_entities.getEntities("Enemy")) {
 
 		e->cLifeSpan->elapsedTime = e->cLifeSpan->timer.getElapsedTime();
 
@@ -110,10 +148,43 @@ void Game::sMovement()
 	}
 }
 
+void Game::sInput()
+{
+	// TODO implent diagonal movement
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+		m_entities.getEntities("Player")[0]->cInput->LEFT = true;
+	}
+	else {
+		m_entities.getEntities("Player")[0]->cInput->LEFT = false;
+	}
+	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+		m_entities.getEntities("Player")[0]->cInput->RIGHT = true;
+	}
+	else {
+		m_entities.getEntities("Player")[0]->cInput->RIGHT = false;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+		m_entities.getEntities("Player")[0]->cInput->UP = true;
+	}
+	else {
+		m_entities.getEntities("Player")[0]->cInput->UP = false;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+		m_entities.getEntities("Player")[0]->cInput->DOWN = true;
+	}
+	else {
+		m_entities.getEntities("Player")[0]->cInput->DOWN = false;
+	}
+
+}
+
 void Game::sCollision()
 {
 
-	for (auto e : m_entities.getEntities("Enemy")) {
+	for (auto& e : m_entities.getEntities("Enemy")) {
 
 		if (e->cTransform->pos.getCords().first - e->cShape->shape.getGlobalBounds().width / 2 < 0) {
 			e->cTransform->speed.reverse(true, false);
@@ -132,6 +203,28 @@ void Game::sCollision()
 		else if (e->cTransform->pos.getCords().second - e->cShape->shape.getGlobalBounds().height / 2 < 0) {
 			e->cTransform->speed.reverse(false, true);
 		}
+	}
+
+	for (auto& player : m_entities.getEntities("Player")) {
+
+		if (player->cTransform->pos.getCords().first - player->cShape->shape.getGlobalBounds().width / 2 < 0) {
+			player->cShape->shape.setPosition(player->cShape->shape.getGlobalBounds().width / 2,
+				player->cShape->shape.getPosition().y);
+		}
+		else if (player->cTransform->pos.getCords().first + player->cShape->shape.getGlobalBounds().width / 2 > m_window.getSize().x) {
+			player->cShape->shape.setPosition(m_window.getSize().x - player->cShape->shape.getGlobalBounds().width / 2,
+				player->cShape->shape.getPosition().y);
+		}
+
+		if (player->cTransform->pos.getCords().second - player->cShape->shape.getGlobalBounds().height / 2 < 0) {
+			player->cShape->shape.setPosition(player->cShape->shape.getPosition().x,
+				player->cShape->shape.getGlobalBounds().height / 2);
+		}
+		else if (player->cTransform->pos.getCords().second + player->cShape->shape.getGlobalBounds().height / 2 > m_window.getSize().y) {
+			player->cShape->shape.setPosition(player->cShape->shape.getPosition().x,
+				m_window.getSize().y - player->cShape->shape.getGlobalBounds().height / 2);
+		}
+
 	}
 
 }

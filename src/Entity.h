@@ -16,7 +16,7 @@ public:
 	std::shared_ptr<CCollision> cCollision;
 	std::shared_ptr<CLifespan> cLifeSpan;
 	std::shared_ptr<CScore> cScore;
-	
+	std::shared_ptr<CInput> cInput;
 	
 	Entity(const std::string& t, const size_t i);
 

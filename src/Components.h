@@ -66,3 +66,16 @@ public:
 	CCollision(float cRad) : radius(cRad) {};
 
 };
+
+class CInput {
+
+public:
+
+	bool UP = false;
+	bool DOWN = false;
+	bool LEFT = false;
+	bool RIGHT = false;
+
+	CInput() {};
+
+};

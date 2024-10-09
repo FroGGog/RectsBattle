@@ -18,11 +18,13 @@ private:
 	sf::Time enemySpawner;
 
 	void init();
+	void initPlayer();
 
 	void sWindowEvents();
 	void sRender();
 	void sSpawnEnimes();
 	void sMovement();
+	void sInput();
 	void sCollision();
 
 
