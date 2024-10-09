@@ -1,5 +1,33 @@
 #include "EntityManager.h"
 
+void EntityManager::deleteEntities()
+{
+
+	for (int i{ 0 }; i < m_entities.size(); i++) {
+
+		if (!m_entities[i]->isAlive()) {
+			toDeleteVec.push_back(i);
+		}
+
+	}
+
+	//go throught all tag, search for dead entities, add their index to deleteMap with
+	//given tag
+	for (const auto& elem : m_entityMap) {
+
+		for (int i{ 0 }; i < elem.second.size(); i++) {
+
+			if (!elem.second[i]->isAlive()) {
+				toDeleteMap[elem.first].push_back(i);
+			}
+
+		}
+
+	}
+
+
+}
+
 void EntityManager::update()
 {
 
@@ -9,9 +37,32 @@ void EntityManager::update()
 		m_entityMap[e->tag()].push_back(e);
 
 	}
-	
 	m_toAdd.clear();
 
+	if (m_entities.size() == 0) {
+		return;
+	}
+
+	//delete dead entities from all entites
+	for (auto index : toDeleteVec) {
+
+		m_entities.erase((m_entities.begin() + index));
+
+	}
+	//delete dead entities from tag map of entitites
+	for (auto& elem : toDeleteMap) {
+
+		for (auto& index : elem.second) {
+
+			m_entityMap[elem.first].erase(m_entityMap[elem.first].begin() + index);
+
+		}
+
+	}
+
+	toDeleteVec.clear();
+	toDeleteMap.clear();
+	
 }
 
 std::shared_ptr<Entity> EntityManager::addEntity(const std::string& tag)

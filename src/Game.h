@@ -14,12 +14,16 @@ private:
 	bool m_paused;
 	bool m_running;
 
+	sf::Clock clock;
+	sf::Time enemySpawner;
+
 	void init();
 
 	void sWindowEvents();
 	void sRender();
 	void sSpawnEnimes();
 	void sMovement();
+	void sCollision();
 
 
 public:

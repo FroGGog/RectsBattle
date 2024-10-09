@@ -39,9 +39,11 @@ class CLifespan {
 public:
 
 	float totalTime;
-	float currentTime;
 
-	CLifespan(float total) : totalTime(total), currentTime(total) {};
+	sf::Clock timer;
+	sf::Time elapsedTime;
+
+	CLifespan(float total) : totalTime(total) { elapsedTime = timer.getElapsedTime(); };
 
 };
 

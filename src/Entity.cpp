@@ -9,6 +9,11 @@ void Entity::destroy()
 	is_alive = false;
 }
 
+bool Entity::isAlive()
+{
+	return is_alive;
+}
+
 const std::string& Entity::tag()
 {
 	return m_tag;

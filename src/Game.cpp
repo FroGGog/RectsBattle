@@ -3,16 +3,21 @@
 Game::Game()
 {
 	init();
+
+	enemySpawner = clock.getElapsedTime();
+
 }
 
 void Game::update()
 {
+	sWindowEvents();
+
+	m_entities.deleteEntities();
 	m_entities.update();
 
 	sSpawnEnimes();
 	sMovement();
-
-	sWindowEvents();
+	sCollision();
 
 	sRender();
 }
@@ -57,12 +62,20 @@ void Game::sRender()
 
 void Game::sSpawnEnimes()
 {
-	if (m_entities.getEntities().size() < 2) {
+	enemySpawner = clock.getElapsedTime();
+
+	if (m_entities.getEntities().size() < 15 && enemySpawner.asSeconds() > .5f) {
 
 		auto e = m_entities.addEntity("Enemy");
 
-		e->cTransform = std::make_shared<CTransform>(Vec2<float>{150.f, 200.f}, Vec2<float>{2.f, 3.f}, Vec2<float>{1, 1}, 0);
-		e->cShape = std::make_shared<CShape>(50.f, 3, e->cTransform->pos, sf::Color::Red, sf::Color::White, 1.f);
+		e->cTransform = std::make_shared<CTransform>(Vec2<float>{(float)(rand() % (m_window.getSize().x - 250) + 100), (float)(rand() % (m_window.getSize().y - 250) + 100)},
+			Vec2<float>{(float)(rand() % 10), (float)(rand() % 10)}, Vec2<float>{1, 1}, 5.f);
+		sf::Color color{ (sf::Uint8)(rand() % 255) , (sf::Uint8)(rand() % 255), (sf::Uint8)(rand() % 255) , 255};
+		e->cShape = std::make_shared<CShape>((float)((rand() % 50) + 15), (float)((rand() % 16) + 3), e->cTransform->pos, color, sf::Color::White, 2.f);
+
+		e->cLifeSpan = std::make_shared<CLifespan>((float)((rand() % 15) + 1));
+
+		enemySpawner = clock.restart();
 
 	}
 	
@@ -70,11 +83,57 @@ void Game::sSpawnEnimes()
 
 void Game::sMovement()
 {
+	// move objects 
 	for (auto e : m_entities.getEntities("Enemy")) {
 
-		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().first);
+		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
+		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
 
 	}
+
+	//rotate objects
+	for (auto e : m_entities.getEntities("Enemy")) {
+
+		e->cShape->shape.rotate(e->cTransform->rotation);
+
+	}
+
+	//minus life span TODO get this to new system
+	for (auto e : m_entities.getEntities("Enemy")) {
+
+		e->cLifeSpan->elapsedTime = e->cLifeSpan->timer.getElapsedTime();
+
+		if (e->cLifeSpan->elapsedTime.asSeconds() > e->cLifeSpan->totalTime) {
+			e->destroy();
+		}
+
+	}
+}
+
+void Game::sCollision()
+{
+
+	for (auto e : m_entities.getEntities("Enemy")) {
+
+		if (e->cTransform->pos.getCords().first - e->cShape->shape.getGlobalBounds().width / 2 < 0) {
+			e->cTransform->speed.reverse(true, false);
+		}
+		else if (e->cTransform->pos.getCords().first + e->cShape->shape.getGlobalBounds().width / 2 >
+			m_window.getSize().x)
+		{
+			e->cTransform->speed.reverse(true, false);
+		}
+
+
+		if (e->cTransform->pos.getCords().second + e->cShape->shape.getGlobalBounds().height / 2 >
+			m_window.getSize().y && e->cTransform->speed.getCords().second > 0) {
+			e->cTransform->speed.reverse(false, true);
+		}
+		else if (e->cTransform->pos.getCords().second - e->cShape->shape.getGlobalBounds().height / 2 < 0) {
+			e->cTransform->speed.reverse(false, true);
+		}
+	}
+
 }
 
 

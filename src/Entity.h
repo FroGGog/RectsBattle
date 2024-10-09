@@ -21,6 +21,7 @@ public:
 	Entity(const std::string& t, const size_t i);
 
 	void destroy();
+	bool isAlive();
 
 	const std::string& tag();
 

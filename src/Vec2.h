@@ -63,6 +63,15 @@ public:
 
 	};
 
+	void reverse(bool x_, bool y_ = false) {
+		if (x_) {
+			x = -x;
+		}
+		if (y_) {
+			y = -y;
+		}
+	}
+
 	const std::pair<T, T> getCords() const 
 	{
 		return std::pair<T, T>(x, y);
