@@ -44,6 +44,7 @@ void Game::initPlayer()
 	e->cTransform = std::make_shared<CTransform>(Vec2<float>{e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y},
 		Vec2<float>{5.f, 5.f}, Vec2<float>{1, 1}, 5.f);
 	e->cInput = std::make_shared<CInput>();
+	e->cShooting = std::make_shared<CShooting>(2.f);
 	
 
 }
@@ -67,9 +68,15 @@ void Game::sRender()
 {
 	m_window.clear();
 
-	for (auto& e : m_entities.getEntities()) {
-		//maybe check if entity dont have cShape components
+	for (auto& e : m_entities.getEntities("Enemy")) {
+
 		m_window.draw(e->cShape->shape);
+	}
+
+	for (auto& e : m_entities.getEntities("Player")) {
+
+		m_window.draw(e->cShape->shape);
+
 	}
 
 	m_window.display();
@@ -80,7 +87,7 @@ void Game::sSpawnEnimes()
 {
 	enemySpawner = clock.getElapsedTime();
 
-	if (m_entities.getEntities().size() < 15 && enemySpawner.asSeconds() > .5f) {
+	if (m_entities.getEntities().size() < 15 && enemySpawner.asSeconds() > 0.f) {
 
 		auto e = m_entities.addEntity("Enemy");
 
@@ -150,33 +157,59 @@ void Game::sMovement()
 
 void Game::sInput()
 {
-	// TODO implent diagonal movement
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-		m_entities.getEntities("Player")[0]->cInput->LEFT = true;
-	}
-	else {
-		m_entities.getEntities("Player")[0]->cInput->LEFT = false;
-	}
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-		m_entities.getEntities("Player")[0]->cInput->RIGHT = true;
-	}
-	else {
-		m_entities.getEntities("Player")[0]->cInput->RIGHT = false;
-	}
+	for (auto& player : m_entities.getEntities("Player"))
+	{
+		// TODO implent diagonal movement
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+			player->cInput->LEFT = true;
+		}
+		else {
+			player->cInput->LEFT = false;
+		}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-		m_entities.getEntities("Player")[0]->cInput->UP = true;
-	}
-	else {
-		m_entities.getEntities("Player")[0]->cInput->UP = false;
-	}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+			player->cInput->RIGHT = true;
+		}
+		else {
+			player->cInput->RIGHT = false;
+		}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-		m_entities.getEntities("Player")[0]->cInput->DOWN = true;
-	}
-	else {
-		m_entities.getEntities("Player")[0]->cInput->DOWN = false;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+			player->cInput->UP = true;
+		}
+		else {
+			player->cInput->UP = false;
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+			player->cInput->DOWN = true;
+		}
+		else {
+			player->cInput->DOWN = false;
+		}
+
+		// Shooting system
+		if(player->cShooting->elapsedTime.asSeconds() < player->cShooting->reloading)
+		{
+			player->cShooting->elapsedTime = player->cShooting->timer.getElapsedTime();
+		}
+		
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+
+			if (player->cShooting->elapsedTime.asSeconds() >
+				player->cShooting->reloading) {
+
+				player->cShooting->elapsedTime = player->cShooting->timer.restart();
+
+				// TODO get mouse position
+
+				//Spawn projectile
+				auto bullet = m_entities.addEntity("Bullet");
+				// TODO add all componets for bullet
+
+			}
+
+		}
 	}
 
 }
@@ -204,6 +237,7 @@ void Game::sCollision()
 			e->cTransform->speed.reverse(false, true);
 		}
 	}
+
 
 	for (auto& player : m_entities.getEntities("Player")) {
 

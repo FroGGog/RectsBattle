@@ -47,6 +47,20 @@ public:
 
 };
 
+class CShooting {
+
+public: 
+
+	sf::Clock timer;
+	sf::Time elapsedTime;
+
+	float reloading;
+
+	CShooting(float reloadTime) : reloading(reloadTime) { elapsedTime = sf::seconds(5); };
+
+};
+
+
 class CScore {
 
 public:
