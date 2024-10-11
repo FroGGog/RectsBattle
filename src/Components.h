@@ -110,6 +110,8 @@ public:
 	bool LEFT = false;
 	bool RIGHT = false;
 
+	bool notMoved = true;
+
 	CInput() {};
 
 };

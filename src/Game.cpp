@@ -47,7 +47,7 @@ void Game::initPlayer()
 	e->cTransform = std::make_shared<CTransform>(Vec2<float>{e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y},
 		Vec2<float>{5.f, 5.f}, Vec2<float>{1, 1}, 5.f);
 	e->cInput = std::make_shared<CInput>();
-	e->cShooting = std::make_shared<CShooting>(1.f);
+	e->cShooting = std::make_shared<CShooting>(0.5f);
 	
 
 }
@@ -143,7 +143,7 @@ void Game::sSpawnEnimes()
 {
 	enemySpawner = clock.getElapsedTime();
 
-	if (m_entities.getEntities("Enemy").size() < 1 && enemySpawner.asSeconds() > 1.5f) {
+	if (m_entities.getEntities("Enemy").size() < 7 && enemySpawner.asSeconds() > 1.5f) {
 
 		auto e = m_entities.addEntity("Enemy");
 
@@ -222,6 +222,7 @@ void Game::sInput()
 		// TODO implent diagonal movement
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
 			player->cInput->LEFT = true;
+			player->cInput->notMoved = false;
 		}
 		else {
 			player->cInput->LEFT = false;
@@ -229,6 +230,7 @@ void Game::sInput()
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
 			player->cInput->RIGHT = true;
+			player->cInput->notMoved = false;
 		}
 		else {
 			player->cInput->RIGHT = false;
@@ -236,6 +238,7 @@ void Game::sInput()
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
 			player->cInput->UP = true;
+			player->cInput->notMoved = false;
 		}
 		else {
 			player->cInput->UP = false;
@@ -243,6 +246,7 @@ void Game::sInput()
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
 			player->cInput->DOWN = true;
+			player->cInput->notMoved = false;
 		}
 		else {
 			player->cInput->DOWN = false;
@@ -324,7 +328,13 @@ void Game::sCollision()
 
 		}
 	}
+
+
 	for (auto& player : m_entities.getEntities("Player")) {
+
+		if (player->cInput->notMoved) {
+			break;
+		}
 
 		for (auto& enemy : m_entities.getEntities("Enemy")) {
 
@@ -333,6 +343,7 @@ void Game::sCollision()
 				enemy->destroy();
 				player->destroy();
 				restart();
+				break;
 
 			}
 
@@ -346,7 +357,7 @@ void Game::sCollision()
 
 void Game::sShooting()
 {
-	if (m_entities.getEntities("Bullet").size() >= 1) {
+	if (m_entities.getEntities("Bullet").size() >= 3) {
 		return;
 	}
 
@@ -385,6 +396,7 @@ void Game::sShooting()
 			bullet->cLifeSpan = std::make_shared<CLifespan>(1.f);
 
 			player->cShooting->canShoot = false;
+			player->cInput->notMoved = false;
 
 
 		}
@@ -409,11 +421,20 @@ void Game::sLifeSpan()
 		float procent =  1 - (((100 * e->cLifeSpan->elapsedTime.asSeconds()) / e->cLifeSpan->totalTime)) / 100;
 		
 		
+		
 		sf::Color newColor{ e->cShape->shape.getFillColor() };
 
 		//change color
-		newColor.a = (sf::Uint8)(255 * procent);
+
+		if (e->tag() == "Bullet" && newColor.a * procent < 1) {
+			newColor.a = 1;
+		}
+		else {
+			newColor.a = (sf::Uint8)(255 * procent);
+		}
+		
 		e->cShape->shape.setFillColor(newColor);
+		
 
 		//change outline
 		if (e->tag() != "Bullet") {
