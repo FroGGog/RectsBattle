@@ -25,5 +25,6 @@ public:
 	bool isAlive();
 
 	const std::string& tag();
+	const size_t& id();
 
 };

@@ -29,6 +29,7 @@ private:
 	void sInput();
 	void sCollision();
 	void sShooting();
+	void sLifeSpan();
 
 	void restart();
 

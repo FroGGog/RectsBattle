@@ -15,6 +15,7 @@ void Game::update()
 	m_entities.update();
 
 	sSpawnEnimes();
+	sLifeSpan();
 	sInput();
 	sMovement();
 	sCollision();
@@ -102,7 +103,7 @@ void Game::sSpawnEnimes()
 {
 	enemySpawner = clock.getElapsedTime();
 
-	if (m_entities.getEntities("Enemy").size() < 5 && enemySpawner.asSeconds() > 1.5f) {
+	if (m_entities.getEntities("Enemy").size() < 1 && enemySpawner.asSeconds() > 1.5f) {
 
 		auto e = m_entities.addEntity("Enemy");
 
@@ -116,7 +117,7 @@ void Game::sSpawnEnimes()
 
 		sf::Color color{ (sf::Uint8)(rand() % 255) , (sf::Uint8)(rand() % 255), (sf::Uint8)(rand() % 255) , 255};
 		e->cShape = std::make_shared<CShape>((float)((rand() % 35) + 15), (float)((rand() % 16) + 3),
-			e->cTransform->pos, color, sf::Color::White, (float)((rand() % 5) + 2));
+			e->cTransform->pos, color, sf::Color::White, 3.f);
 
 		e->cLifeSpan = std::make_shared<CLifespan>((float)((rand() % 20) + 5));
 
@@ -168,23 +169,6 @@ void Game::sMovement()
 	for (auto& e : m_entities.getEntities()) {
 
 		e->cShape->shape.rotate(e->cTransform->rotation);
-
-	}
-
-
-
-	//minus life span TODO get this to new system
-	for (auto& e : m_entities.getEntities()) {
-
-		if (e->cLifeSpan == nullptr) {
-			continue;
-		}
-
-		e->cLifeSpan->elapsedTime = e->cLifeSpan->timer.getElapsedTime();
-
-		if (e->cLifeSpan->elapsedTime.asSeconds() > e->cLifeSpan->totalTime) {
-			e->destroy();
-		}
 
 	}
 }
@@ -361,6 +345,37 @@ void Game::sShooting()
 			player->cShooting->canShoot = false;
 
 
+		}
+
+	}
+
+
+}
+
+void Game::sLifeSpan()
+{
+
+	//minus lifespan
+	for (auto& e : m_entities.getEntities()) {
+
+		if (e->cLifeSpan == nullptr) {
+			continue;
+		}
+
+		e->cLifeSpan->elapsedTime = e->cLifeSpan->timer.getElapsedTime();
+		float procent =  1 - (((100 * e->cLifeSpan->elapsedTime.asSeconds()) / e->cLifeSpan->totalTime)) / 100;
+		
+		
+		sf::Color newColor{ e->cShape->shape.getFillColor() };
+
+		newColor.a = (sf::Uint8)(255 * procent);
+		float outThick = 3.f * procent;
+
+		e->cShape->shape.setFillColor(newColor);
+		e->cShape->shape.setOutlineThickness(outThick);
+
+		if (e->cLifeSpan->elapsedTime.asSeconds() > e->cLifeSpan->totalTime) {
+			e->destroy();
 		}
 
 	}
