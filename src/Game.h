@@ -26,6 +26,7 @@ private:
 	void sWindowEvents();
 	void sRender();
 	void sSpawnEnimes();
+	void sSpawnAfterKill(int fragments, Vec2<float> pos_);
 	void sMovement();
 	void sInput();
 	void sCollision();

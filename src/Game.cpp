@@ -1,5 +1,7 @@
 #include "Game.h"
 
+// TODO rafactor system
+
 Game::Game()
 {
 	init();
@@ -9,17 +11,18 @@ Game::Game()
 
 void Game::update()
 {
-	sWindowEvents();
-
 	m_entities.deleteEntities();
 	m_entities.update();
 
-	sSpawnEnimes();
-	sLifeSpan();
+	sWindowEvents();
+
 	sInput();
 	sMovement();
 	sCollision();
 
+	sSpawnEnimes();
+	sLifeSpan();
+	
 	sRender();
 }
 
@@ -123,6 +126,11 @@ void Game::sRender()
 		m_window.draw(e->cShape->shape);
 	}
 
+	for (auto& e : m_entities.getEntities("SmallEnemy")) {
+
+		m_window.draw(e->cShape->shape);
+	}
+
 	for (auto& e : m_entities.getEntities("Player")) {
 
 		m_window.draw(e->cShape->shape);
@@ -168,10 +176,40 @@ void Game::sSpawnEnimes()
 	
 }
 
+void Game::sSpawnAfterKill(int fragments, Vec2<float> pos_)
+{
+	//Spawn new entities
+	for (int count{ fragments }; count > 0; count--)
+	{
+
+		auto e = m_entities.addEntity("SmallEnemy");
+
+		e->cTransform = std::make_shared<CTransform>(Vec2<float>{pos_}, Vec2<float>{(float)(rand() % 3), 1.f},
+			Vec2<float>{0.5f, 0.5f}, (360.f / (float)(fragments)));
+
+		e->cShape = std::make_shared<CShape>(25.f / 2.f, fragments, Vec2<float>{e->cTransform->pos}, sf::Color::Cyan, sf::Color::White, 2.f);
+
+		e->cLifeSpan = std::make_shared<CLifespan>(3.f);
+
+
+	};
+
+
+}
+
 void Game::sMovement()
 {
+	// TODO create new function that takes tag as param 
+
 	// move objects 
 	for (auto& e : m_entities.getEntities("Enemy")) {
+
+		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
+		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
+
+	}
+
+	for (auto& e : m_entities.getEntities("SmallEnemy")) {
 
 		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
 		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
@@ -258,6 +296,8 @@ void Game::sInput()
 
 void Game::sCollision()
 {
+	// TODO add help function
+
 	//check border collision
 	for (auto& e : m_entities.getEntities("Enemy")) {
 
@@ -279,6 +319,7 @@ void Game::sCollision()
 			e->cTransform->speed.reverse(false, true);
 		}
 	}
+
 
 
 	for (auto& player : m_entities.getEntities("Player")) {
@@ -315,7 +356,7 @@ void Game::sCollision()
 
 	}
 
-	// check box collision
+	// check box collision bullet to big enemy
 	for (auto& bullet : m_entities.getEntities("Bullet")) {
 
 		for (auto& enemy : m_entities.getEntities("Enemy")) {
@@ -324,10 +365,29 @@ void Game::sCollision()
 
 				bullet->destroy();
 				enemy->destroy();
+
+				sSpawnAfterKill(enemy->cShape->shape.getPointCount(), enemy->cTransform->pos);
+
+			}
+		}
+	}
+
+	for (auto& bullet : m_entities.getEntities("Bullet")) {
+
+		for (auto& s_enemy : m_entities.getEntities("SmallEnemy")) {
+
+			if (bullet->cShape->shape.getGlobalBounds().intersects(s_enemy->cShape->shape.getGlobalBounds())) {
+
+				bullet->destroy();
+				s_enemy->destroy();
+
 			}
 
 		}
+
+
 	}
+
 
 
 	for (auto& player : m_entities.getEntities("Player")) {

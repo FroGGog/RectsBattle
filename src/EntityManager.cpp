@@ -47,16 +47,18 @@ void EntityManager::update()
 	//delete dead entities from all entites
 	for (auto index : toDeleteVec) {
 
-		m_entities.erase((m_entities.begin() + index + missing));
+		m_entities.erase((m_entities.begin() + (index + missing)));
 		missing--;
 
 	}
+	
 	//delete dead entities from tag map of entitites
 	for (auto& elem : toDeleteMap) {
-
+		missing = 0;
 		for (auto& index : elem.second) {
 
-			m_entityMap[elem.first].erase(m_entityMap[elem.first].begin() + index);
+			m_entityMap[elem.first].erase(m_entityMap[elem.first].begin() + (index + missing));
+			missing--;
 
 		}
 
