@@ -13,6 +13,7 @@ public:
 
 	Vec2(T x_, T y_) : x(x_), y(y_) {};
 	Vec2() : x(0), y(0) {};
+	Vec2(Vec2& vec_) { x = vec_.x; y = vec_.y; };
 
 	bool operator ==(const Vec2& vec_) const 
 	{

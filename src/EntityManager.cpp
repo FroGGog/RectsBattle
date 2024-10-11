@@ -43,10 +43,12 @@ void EntityManager::update()
 		return;
 	}
 
+	int missing = 0;
 	//delete dead entities from all entites
 	for (auto index : toDeleteVec) {
 
-		m_entities.erase((m_entities.begin() + index));
+		m_entities.erase((m_entities.begin() + index + missing));
+		missing--;
 
 	}
 	//delete dead entities from tag map of entitites
@@ -80,4 +82,17 @@ EntityVec& EntityManager::getEntities()
 EntityVec& EntityManager::getEntities(const std::string& tag)
 {
 	return m_entityMap[tag];
+}
+
+void EntityManager::restart()
+{
+	m_entities.clear();
+	m_entityMap.clear();
+
+	m_toAdd.clear();
+	toDeleteVec.clear();
+	toDeleteMap.clear();
+
+	m_totalEntities = 0;
+
 }

@@ -14,6 +14,8 @@ private:
 	bool m_paused;
 	bool m_running;
 
+	int score;
+
 	sf::Clock clock;
 	sf::Time enemySpawner;
 
@@ -26,7 +28,9 @@ private:
 	void sMovement();
 	void sInput();
 	void sCollision();
+	void sShooting();
 
+	void restart();
 
 public:
 

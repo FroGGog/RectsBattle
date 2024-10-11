@@ -55,6 +55,7 @@ public:
 	sf::Time elapsedTime;
 
 	float reloading;
+	bool canShoot = true;
 
 	CShooting(float reloadTime) : reloading(reloadTime) { elapsedTime = sf::seconds(5); };
 

@@ -28,4 +28,6 @@ public:
 	EntityVec& getEntities();
 	EntityVec& getEntities(const std::string& tag);
 
+	void restart();
+
 };
