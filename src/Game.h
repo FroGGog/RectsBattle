@@ -21,6 +21,7 @@ private:
 
 	void init();
 	void initPlayer();
+	void initBackground();
 
 	void sWindowEvents();
 	void sRender();

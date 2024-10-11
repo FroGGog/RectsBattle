@@ -4,7 +4,7 @@ Game::Game()
 {
 	init();
 	initPlayer();
-
+	initBackground();
 }
 
 void Game::update()
@@ -30,7 +30,7 @@ bool Game::isRunning() const
 
 void Game::init()
 {
-	m_window.create(sf::VideoMode{ 1280, 720 }, "Assigment2", sf::Style::Close);
+	m_window.create(sf::VideoMode{ 1280, 768 }, "Assigment2", sf::Style::Close);
 	m_window.setFramerateLimit(60);
 
 	score = 0;
@@ -49,6 +49,40 @@ void Game::initPlayer()
 	e->cInput = std::make_shared<CInput>();
 	e->cShooting = std::make_shared<CShooting>(1.f);
 	
+
+}
+
+void Game::initBackground()
+{
+	bool grey = true;
+
+	for (int collumns{ 0 }; collumns < (m_window.getSize().x / 32) + 1 ; collumns++) {
+
+		for (int rows{ 0 }; rows < (m_window.getSize().y / 32) + 1 ; rows++) {
+
+			auto e = m_entities.addEntity("Background");
+			sf::Color color;
+			if (grey) {
+				color = sf::Color{ 128, 133, 136, 150 };
+				grey = !grey;
+			}
+			else {
+				color = sf::Color{ 72, 73, 75, 150 };
+				grey = !grey;
+			}
+			//changed to vertex because of framedrops
+			
+			e->cVertexArray = std::make_shared<CVertex>(color);
+
+			e->cVertexArray->vertex[0].position = sf::Vector2f{ (float)(32 * collumns), (float)(32 * rows) };
+			e->cVertexArray->vertex[1].position = sf::Vector2f{ (float)(32 * collumns), (float)(32 * (rows + 1)) };
+			e->cVertexArray->vertex[2].position = sf::Vector2f{ (float)(32 * (collumns + 1)), (float)(32 * (rows + 1)) };
+			e->cVertexArray->vertex[3].position = sf::Vector2f{ (float)(32 * (collumns + 1)), (float)(32 * rows) };
+
+		}
+
+	}
+
 
 }
 
@@ -77,6 +111,12 @@ void Game::sWindowEvents()
 void Game::sRender()
 {
 	m_window.clear();
+
+	for (auto& e : m_entities.getEntities("Background")) {
+
+		m_window.draw(e->cVertexArray->vertex);
+
+	}
 
 	for (auto& e : m_entities.getEntities("Enemy")) {
 
@@ -116,7 +156,7 @@ void Game::sSpawnEnimes()
 
 
 		sf::Color color{ (sf::Uint8)(rand() % 255) , (sf::Uint8)(rand() % 255), (sf::Uint8)(rand() % 255) , 255};
-		e->cShape = std::make_shared<CShape>((float)((rand() % 35) + 15), (float)((rand() % 16) + 3),
+		e->cShape = std::make_shared<CShape>((float)((rand() % 35) + 15), (float)((rand() % 8) + 3),
 			e->cTransform->pos, color, sf::Color::White, 3.f);
 
 		e->cLifeSpan = std::make_shared<CLifespan>((float)((rand() % 20) + 5));
@@ -168,7 +208,9 @@ void Game::sMovement()
 	//rotate objects
 	for (auto& e : m_entities.getEntities()) {
 
-		e->cShape->shape.rotate(e->cTransform->rotation);
+		if (e->cShape != nullptr) {
+			e->cShape->shape.rotate(e->cTransform->rotation);
+		}
 
 	}
 }
@@ -363,16 +405,21 @@ void Game::sLifeSpan()
 		}
 
 		e->cLifeSpan->elapsedTime = e->cLifeSpan->timer.getElapsedTime();
+		// calculate procent of lifespan passed
 		float procent =  1 - (((100 * e->cLifeSpan->elapsedTime.asSeconds()) / e->cLifeSpan->totalTime)) / 100;
 		
 		
 		sf::Color newColor{ e->cShape->shape.getFillColor() };
 
+		//change color
 		newColor.a = (sf::Uint8)(255 * procent);
-		float outThick = 3.f * procent;
-
 		e->cShape->shape.setFillColor(newColor);
-		e->cShape->shape.setOutlineThickness(outThick);
+
+		//change outline
+		if (e->tag() != "Bullet") {
+			float outThick = 3.f * procent;
+			e->cShape->shape.setOutlineThickness(outThick);
+		}
 
 		if (e->cLifeSpan->elapsedTime.asSeconds() > e->cLifeSpan->totalTime) {
 			e->destroy();
@@ -390,7 +437,7 @@ void Game::restart()
 
 	init();
 	initPlayer();
-	
+	initBackground();
 
 }
 

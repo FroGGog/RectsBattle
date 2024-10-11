@@ -34,6 +34,25 @@ public:
 
 };
 
+class CVertex {
+
+public:
+
+	sf::VertexArray vertex;
+
+	CVertex(const sf::Color& fillColor) {
+
+		vertex = sf::VertexArray{ sf::Quads, 4 };
+		vertex[0].color = fillColor;
+		vertex[1].color = fillColor;
+		vertex[2].color = fillColor;
+		vertex[3].color = fillColor;
+
+	}
+
+};
+
+
 class CLifespan {
 
 public:

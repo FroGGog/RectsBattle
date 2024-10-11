@@ -13,6 +13,7 @@ public:
 
 	std::shared_ptr<CTransform> cTransform;
 	std::shared_ptr<CShape> cShape;
+	std::shared_ptr<CVertex> cVertexArray;
 	std::shared_ptr<CCollision> cCollision;
 	std::shared_ptr<CLifespan> cLifeSpan;
 	std::shared_ptr<CScore> cScore;
