@@ -1,12 +1,16 @@
 #include "Game.h"
 
-// TODO rafactor system
+
 
 Game::Game()
 {
 	init();
 	initPlayer();
 	initBackground();
+
+	ImGui::SFML::Init(m_window);
+
+	ImGui::GetStyle().ScaleAllSizes(1.f);
 
 	if (!font_main.loadFromFile("BrownieStencil-8O8MJ.ttf")) {
 		std::cout << "ERROR::LOADFROMFILE::FONT font_main\n";
@@ -21,6 +25,8 @@ Game::Game()
 
 void Game::update()
 {
+	ImGui::SFML::Update(m_window, deltaClock.restart());
+
 	m_entities.deleteEntities();
 	m_entities.update();
 
@@ -28,12 +34,15 @@ void Game::update()
 
 	sInput();
 	sMovement();
-	sCollision();
+	if (m_collisions) {
+		sCollision();
+	}
 
 	sSpawnEnimes();
 	sLifeSpan();
 	
 	sUpdateScore();
+	sImGUI();
 
 	sRender();
 }
@@ -49,6 +58,8 @@ void Game::init()
 	m_window.setFramerateLimit(60);
 
 	score = 0;
+	m_collisions = true;
+
 	clock.restart();
 }
 
@@ -105,6 +116,8 @@ void Game::sWindowEvents()
 {
 	while (m_window.pollEvent(evt)) {
 
+		ImGui::SFML::ProcessEvent(evt);
+
 		switch (evt.type)
 		{
 		case sf::Event::Closed:
@@ -157,6 +170,9 @@ void Game::sRender()
 
 	// GUI
 	m_window.draw(text_score);
+
+	ImGui::ShowDemoWindow();
+	ImGui::SFML::Render(m_window);
 
 	m_window.display();
 
@@ -539,6 +555,44 @@ void Game::sLifeSpan()
 void Game::sUpdateScore()
 {
 	text_score.setString(std::to_string(score));
+}
+
+void Game::sImGUI()
+{
+	ImGui::Begin("Game properties");
+
+	// All tabs
+	ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+	if (ImGui::BeginTabBar("Tabs", tab_bar_flags)) {
+
+		if (ImGui::BeginTabItem("Systems")) {
+
+			ImGui::Checkbox("Collisions", &m_collisions);
+
+
+			ImGui::EndTabItem();
+
+		}
+
+		if (ImGui::BeginTabItem("All Ent")) {
+
+			ImGui::EndTabItem();
+
+		}
+
+		if (ImGui::BeginTabItem("Grouped")) {
+
+			ImGui::EndTabItem();
+
+		}
+
+
+
+		ImGui::EndTabBar();
+	}
+
+
+	ImGui::End();
 }
 
 void Game::restart()

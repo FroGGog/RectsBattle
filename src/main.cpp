@@ -14,6 +14,8 @@ int main() {
 
 	}
 
+	ImGui::SFML::Shutdown();
+
 	return 0;
 
 }

@@ -1,5 +1,10 @@
 #include "SFML/Graphics.hpp"
 
+
+#include <imgui-SFML.h>
+#include <imgui.h>
+
+
 #include "EntityManager.h"
 
 class Game {
@@ -14,9 +19,12 @@ private:
 	bool m_paused;
 	bool m_running;
 
+	bool m_collisions;
+
 	int score;
 
 	sf::Clock clock;
+	sf::Clock deltaClock;
 	sf::Time enemySpawner;
 
 	sf::Font font_main;
@@ -36,6 +44,7 @@ private:
 	void sShooting();
 	void sLifeSpan();
 	void sUpdateScore();
+	void sImGUI();
 
 	void restart();
 
