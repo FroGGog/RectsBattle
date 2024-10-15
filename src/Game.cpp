@@ -7,6 +7,16 @@ Game::Game()
 	init();
 	initPlayer();
 	initBackground();
+
+	if (!font_main.loadFromFile("BrownieStencil-8O8MJ.ttf")) {
+		std::cout << "ERROR::LOADFROMFILE::FONT font_main\n";
+	}
+	else {
+		text_score.setFont(font_main);
+		text_score.setCharacterSize(32);
+		text_score.setPosition(0.f, 0.f);
+		text_score.setString(std::to_string(score));
+	}
 }
 
 void Game::update()
@@ -23,6 +33,8 @@ void Game::update()
 	sSpawnEnimes();
 	sLifeSpan();
 	
+	sUpdateScore();
+
 	sRender();
 }
 
@@ -143,6 +155,9 @@ void Game::sRender()
 
 	}
 
+	// GUI
+	m_window.draw(text_score);
+
 	m_window.display();
 
 }
@@ -168,29 +183,34 @@ void Game::sSpawnEnimes()
 			e->cTransform->pos, color, sf::Color::White, 3.f);
 
 		e->cLifeSpan = std::make_shared<CLifespan>((float)((rand() % 20) + 5));
+		e->cScore = std::make_shared<CScore>(e->cShape->shape.getPointCount() * 120);
 
-		
 		enemySpawner = clock.restart();
 
 	}
 	
 }
 
-void Game::sSpawnAfterKill(int fragments, Vec2<float> pos_)
+void Game::sSpawnAfterKill(int fragments, Vec2<float> pos_, const sf::Color color_)
 {
+	float plusAngle = 360.f / (float)(fragments);
+	float totalAngle = 0.f;
+
 	//Spawn new entities
 	for (int count{ fragments }; count > 0; count--)
 	{
 
 		auto e = m_entities.addEntity("SmallEnemy");
 
-		e->cTransform = std::make_shared<CTransform>(Vec2<float>{pos_}, Vec2<float>{(float)(rand() % 3), 1.f},
-			Vec2<float>{0.5f, 0.5f}, (360.f / (float)(fragments)));
+		e->cTransform = std::make_shared<CTransform>(Vec2<float>{pos_}, Vec2<float>{sin(totalAngle)*2.f, cos(totalAngle) * 2.f},
+			Vec2<float>{0.5f, 0.5f}, ((360.f / (float)(fragments)) / 50.f));
 
-		e->cShape = std::make_shared<CShape>(25.f / 2.f, fragments, Vec2<float>{e->cTransform->pos}, sf::Color::Cyan, sf::Color::White, 2.f);
+		e->cShape = std::make_shared<CShape>(25.f / 2.f, fragments, Vec2<float>{e->cTransform->pos}, color_, sf::Color::White, 2.f);
 
-		e->cLifeSpan = std::make_shared<CLifespan>(3.f);
+		e->cLifeSpan = std::make_shared<CLifespan>(1.f);
+		e->cScore = std::make_shared<CScore>(e->cShape->shape.getPointCount() * 200);
 
+		totalAngle += plusAngle;
 
 	};
 
@@ -247,7 +267,9 @@ void Game::sMovement()
 	for (auto& e : m_entities.getEntities()) {
 
 		if (e->cShape != nullptr) {
-			e->cShape->shape.rotate(e->cTransform->rotation);
+			if (e->cTransform->rotation != 0) {
+				e->cShape->shape.rotate(e->cTransform->rotation);
+			}
 		}
 
 	}
@@ -366,7 +388,10 @@ void Game::sCollision()
 				bullet->destroy();
 				enemy->destroy();
 
-				sSpawnAfterKill(enemy->cShape->shape.getPointCount(), enemy->cTransform->pos);
+				score += enemy->cScore->score;
+
+				sSpawnAfterKill(enemy->cShape->shape.getPointCount(), enemy->cTransform->pos,
+					enemy->cShape->shape.getFillColor());
 
 			}
 		}
@@ -381,15 +406,15 @@ void Game::sCollision()
 				bullet->destroy();
 				s_enemy->destroy();
 
+				score += s_enemy->cScore->score;
 			}
 
 		}
 
-
 	}
 
 
-
+	//check player enemy collision if so restart game
 	for (auto& player : m_entities.getEntities("Player")) {
 
 		if (player->cInput->notMoved) {
@@ -509,6 +534,11 @@ void Game::sLifeSpan()
 	}
 
 
+}
+
+void Game::sUpdateScore()
+{
+	text_score.setString(std::to_string(score));
 }
 
 void Game::restart()

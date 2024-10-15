@@ -19,6 +19,9 @@ private:
 	sf::Clock clock;
 	sf::Time enemySpawner;
 
+	sf::Font font_main;
+	sf::Text text_score;
+
 	void init();
 	void initPlayer();
 	void initBackground();
@@ -26,12 +29,13 @@ private:
 	void sWindowEvents();
 	void sRender();
 	void sSpawnEnimes();
-	void sSpawnAfterKill(int fragments, Vec2<float> pos_);
+	void sSpawnAfterKill(int fragments, Vec2<float> pos_, const sf::Color color_);
 	void sMovement();
 	void sInput();
 	void sCollision();
 	void sShooting();
 	void sLifeSpan();
+	void sUpdateScore();
 
 	void restart();
 

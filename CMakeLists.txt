@@ -10,7 +10,7 @@ FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 2.6.x)
 
-set(SFML_BUILD_NETWORK FALSE)
+set(SFML_BUILD_NETWORK FALSE) 
 FetchContent_MakeAvailable(SFML)
 
 # add imgui to project
@@ -64,6 +64,16 @@ set(CONFIG_FILE "${CMAKE_SOURCE_DIR}/src/config.txt")
 add_custom_command(TARGET Assigment2 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:Assigment2>
     COMMENT "Copying CONFIG_FILE file to output directory"
+)
+
+# Add fonts
+# Dirs to font
+set(FONT_FILE "${CMAKE_SOURCE_DIR}/BrownieStencil-8O8MJ.ttf")
+
+# Copy font file to build dir
+add_custom_command(TARGET Assigment2 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${FONT_FILE} $<TARGET_FILE_DIR:Assigment2>
+    COMMENT "Copying font file to output directory"
 )
 
 if(WIN32)
