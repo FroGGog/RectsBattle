@@ -19,7 +19,10 @@ private:
 	bool m_paused;
 	bool m_running;
 
+	//start|stop systems
 	bool m_collisions;
+	bool m_spawner;
+	bool m_movement;
 
 	int score;
 
@@ -39,6 +42,7 @@ private:
 	void sSpawnEnimes();
 	void sSpawnAfterKill(int fragments, Vec2<float> pos_, const sf::Color color_);
 	void sMovement();
+	void sRotating();
 	void sInput();
 	void sCollision();
 	void sShooting();

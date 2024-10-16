@@ -1,7 +1,6 @@
 #include "Game.h"
 
 
-
 Game::Game()
 {
 	init();
@@ -33,12 +32,20 @@ void Game::update()
 	sWindowEvents();
 
 	sInput();
-	sMovement();
+
+	if (m_movement) {
+		sMovement();
+	}
+
+	sRotating();
+
 	if (m_collisions) {
 		sCollision();
 	}
 
-	sSpawnEnimes();
+	if (m_spawner) {
+		sSpawnEnimes();
+	}
 	sLifeSpan();
 	
 	sUpdateScore();
@@ -59,6 +66,7 @@ void Game::init()
 
 	score = 0;
 	m_collisions = true;
+	m_movement = true;
 
 	clock.restart();
 }
@@ -128,7 +136,10 @@ void Game::sWindowEvents()
 				sShooting();
 			}
 			break;
-
+		case sf::Event::KeyPressed:
+			if (evt.key.code == sf::Keyboard::P) {
+				m_paused = !m_paused;
+			}
 		default:
 			break;
 		}
@@ -180,6 +191,8 @@ void Game::sRender()
 
 void Game::sSpawnEnimes()
 {
+	// TODO : Fix staribg enemy speed (not it's only positive values)
+
 	enemySpawner = clock.getElapsedTime();
 
 	if (m_entities.getEntities("Enemy").size() < 7 && enemySpawner.asSeconds() > 1.5f) {
@@ -279,6 +292,11 @@ void Game::sMovement()
 		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
 	}
 
+	
+}
+
+void Game::sRotating()
+{
 	//rotate objects
 	for (auto& e : m_entities.getEntities()) {
 
@@ -289,6 +307,7 @@ void Game::sMovement()
 		}
 
 	}
+
 }
 
 void Game::sInput()
@@ -521,13 +540,12 @@ void Game::sLifeSpan()
 		// calculate procent of lifespan passed
 		float procent =  1 - (((100 * e->cLifeSpan->elapsedTime.asSeconds()) / e->cLifeSpan->totalTime)) / 100;
 		
-		
-		
 		sf::Color newColor{ e->cShape->shape.getFillColor() };
 
 		//change color
 
-		if (e->tag() == "Bullet" && newColor.a * procent < 1) {
+		//so it will not overflow
+		if (newColor.a* procent < 1) {
 			newColor.a = 1;
 		}
 		else {
@@ -568,6 +586,9 @@ void Game::sImGUI()
 		if (ImGui::BeginTabItem("Systems")) {
 
 			ImGui::Checkbox("Collisions", &m_collisions);
+			ImGui::Checkbox("Movement", &m_movement);
+			ImGui::Checkbox("Spawner", &m_spawner);
+
 
 
 			ImGui::EndTabItem();
