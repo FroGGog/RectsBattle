@@ -3,6 +3,7 @@
 
 #include <imgui-SFML.h>
 #include <imgui.h>
+#include <iostream>
 
 
 #include "EntityManager.h"
@@ -18,6 +19,7 @@ private:
 
 	bool m_paused;
 	bool m_running;
+	bool manualSpawn;
 
 	//start|stop systems
 	bool m_collisions;
@@ -25,6 +27,7 @@ private:
 	bool m_movement;
 
 	int score;
+	float spawnRate;
 
 	sf::Clock clock;
 	sf::Clock deltaClock;
@@ -44,6 +47,7 @@ private:
 	void sMovement();
 	void sRotating();
 	void sInput();
+	void sWinCollision();
 	void sCollision();
 	void sShooting();
 	void sLifeSpan();

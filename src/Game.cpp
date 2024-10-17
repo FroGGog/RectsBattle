@@ -1,5 +1,6 @@
 #include "Game.h"
 
+// TODO : work on superpower abillity 
 
 Game::Game()
 {
@@ -26,29 +27,36 @@ void Game::update()
 {
 	ImGui::SFML::Update(m_window, deltaClock.restart());
 
-	m_entities.deleteEntities();
-	m_entities.update();
 
 	sWindowEvents();
 
-	sInput();
+	if (!m_paused)
+	{
 
-	if (m_movement) {
-		sMovement();
+		m_entities.deleteEntities();
+		m_entities.update();
+
+		sInput();
+
+		if (m_movement) {
+			sMovement();
+		}
+
+		sRotating();
+
+		if (m_collisions) {
+			sCollision();
+		}
+		sWinCollision();
+
+		if (m_spawner || manualSpawn) {
+			sSpawnEnimes();
+		}
+		sLifeSpan();
+		sUpdateScore();
+
 	}
 
-	sRotating();
-
-	if (m_collisions) {
-		sCollision();
-	}
-
-	if (m_spawner) {
-		sSpawnEnimes();
-	}
-	sLifeSpan();
-	
-	sUpdateScore();
 	sImGUI();
 
 	sRender();
@@ -65,8 +73,12 @@ void Game::init()
 	m_window.setFramerateLimit(60);
 
 	score = 0;
+	spawnRate = 1.5f;
 	m_collisions = true;
 	m_movement = true;
+	m_spawner = true;
+	m_paused = false;
+	manualSpawn = false;
 
 	clock.restart();
 }
@@ -126,6 +138,7 @@ void Game::sWindowEvents()
 
 		ImGui::SFML::ProcessEvent(evt);
 
+
 		switch (evt.type)
 		{
 		case sf::Event::Closed:
@@ -139,7 +152,13 @@ void Game::sWindowEvents()
 		case sf::Event::KeyPressed:
 			if (evt.key.code == sf::Keyboard::P) {
 				m_paused = !m_paused;
+				break;
 			}
+			if (evt.key.code == sf::Keyboard::Escape) {
+				m_running = false;
+				break;
+			}
+			break;
 		default:
 			break;
 		}
@@ -195,7 +214,7 @@ void Game::sSpawnEnimes()
 
 	enemySpawner = clock.getElapsedTime();
 
-	if (m_entities.getEntities("Enemy").size() < 7 && enemySpawner.asSeconds() > 1.5f) {
+	if ((m_entities.getEntities("Enemy").size() < 500 && enemySpawner.asSeconds() > spawnRate) || manualSpawn) {
 
 		auto e = m_entities.addEntity("Enemy");
 
@@ -215,6 +234,8 @@ void Game::sSpawnEnimes()
 		e->cScore = std::make_shared<CScore>(e->cShape->shape.getPointCount() * 120);
 
 		enemySpawner = clock.restart();
+
+		manualSpawn = false;
 
 	}
 	
@@ -351,9 +372,8 @@ void Game::sInput()
 
 }
 
-void Game::sCollision()
+void Game::sWinCollision()
 {
-	// TODO add help function
 
 	//check border collision
 	for (auto& e : m_entities.getEntities("Enemy")) {
@@ -376,8 +396,6 @@ void Game::sCollision()
 			e->cTransform->speed.reverse(false, true);
 		}
 	}
-
-
 
 	for (auto& player : m_entities.getEntities("Player")) {
 
@@ -413,6 +431,11 @@ void Game::sCollision()
 
 	}
 
+
+}
+
+void Game::sCollision()
+{
 	// check box collision bullet to big enemy
 	for (auto& bullet : m_entities.getEntities("Bullet")) {
 
@@ -589,7 +612,12 @@ void Game::sImGUI()
 			ImGui::Checkbox("Movement", &m_movement);
 			ImGui::Checkbox("Spawner", &m_spawner);
 
+			ImGui::SliderFloat("Spawn ration", &spawnRate, 0.1f, 3.f, "ratio = %.1f");
 
+			if (ImGui::Button("Spawn enemy"))
+			{
+				manualSpawn = true;
+			}
 
 			ImGui::EndTabItem();
 
@@ -597,12 +625,88 @@ void Game::sImGUI()
 
 		if (ImGui::BeginTabItem("All Ent")) {
 
+			for (auto& ent : m_entities.getEntities()) {
+
+				if (ImGui::Button(std::to_string(ent->id()).c_str())) {
+
+					ent->destroy();
+
+				}
+				ImGui::SameLine();
+
+				std::string id_ = std::to_string(ent->id());
+
+				std::string pos_x{ "" };
+				std::string pos_y{ "" };
+
+				if (ent->cTransform != nullptr) {
+					pos_x = std::to_string((int)ent->cTransform->pos.getCords().first);
+					pos_y = std::to_string((int)ent->cTransform->pos.getCords().second);
+				}
+				else if(ent->cShape != nullptr){
+					pos_x = std::to_string((int)ent->cShape->shape.getPosition().x);
+					pos_y = std::to_string((int)ent->cShape->shape.getPosition().y);
+				}
+				else {
+					pos_x = std::to_string((int)ent->cVertexArray->vertex.getBounds().getPosition().x);
+					pos_y = std::to_string((int)ent->cVertexArray->vertex.getBounds().getPosition().y);
+				}
+
+				id_ += "\t" + ent->tag() + "\t" + "( " + pos_x + " , " + pos_y + " )\n";
+
+				ImGui::Text(id_.c_str());
+
+			}
+
 			ImGui::EndTabItem();
 
 		}
 
 		if (ImGui::BeginTabItem("Grouped")) {
 
+			for (auto tag : m_entities.getEntityMap()) {
+
+				std::string header = tag.first;
+
+				if (ImGui::CollapsingHeader(header.c_str(), ImGuiTreeNodeFlags_None))
+				{
+					for (auto ent : tag.second) {
+
+						if (ImGui::Button(std::to_string(ent->id()).c_str())) {
+
+							ent->destroy();
+
+						}
+						ImGui::SameLine();
+
+						std::string id_ = std::to_string(ent->id());
+
+						std::string pos_x{ "" };
+						std::string pos_y{ "" };
+
+						if (ent->cTransform != nullptr) {
+							pos_x = std::to_string((int)ent->cTransform->pos.getCords().first);
+							pos_y = std::to_string((int)ent->cTransform->pos.getCords().second);
+						}
+						else if (ent->cShape != nullptr) {
+							pos_x = std::to_string((int)ent->cShape->shape.getPosition().x);
+							pos_y = std::to_string((int)ent->cShape->shape.getPosition().y);
+						}
+						else {
+							pos_x = std::to_string((int)ent->cVertexArray->vertex.getBounds().getPosition().x);
+							pos_y = std::to_string((int)ent->cVertexArray->vertex.getBounds().getPosition().y);
+						}
+
+						id_ += "\t" + ent->tag() + "\t" + "( " + pos_x + " , " + pos_y + " )\n";
+
+						ImGui::Text(id_.c_str());
+
+					}
+
+				}
+
+			}
+			
 			ImGui::EndTabItem();
 
 		}

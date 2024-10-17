@@ -86,6 +86,11 @@ EntityVec& EntityManager::getEntities(const std::string& tag)
 	return m_entityMap[tag];
 }
 
+EntityMap& EntityManager::getEntityMap()
+{
+	return m_entityMap;
+}
+
 void EntityManager::restart()
 {
 	m_entities.clear();
