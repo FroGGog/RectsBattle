@@ -1,6 +1,7 @@
 #pragma once
 #include <math.h>
 #include <iostream>
+#include "SFML/Graphics.hpp"
 
 template <class T>
 class Vec2 {
@@ -45,7 +46,11 @@ public:
 	{
 		return Vec(x * number, y * number);
 	};
+
+	sf::Vector2f toVector2f() const { return sf::Vector2f{ x, y }; }
 	
+	Vec2<T> toVec2f(sf::Vector2f vec2f) const { return Vec2<float>{vec2f.x, vec2f.y}; }
+
 	void operator =(const Vec2& vec_)
 	{
 		x = vec_.x;

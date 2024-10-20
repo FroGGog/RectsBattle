@@ -198,6 +198,14 @@ void Game::sRender()
 
 	}
 
+	for (auto& e : m_entities.getEntities("ab_Bullet")) {
+
+		m_window.draw(e->cAbbility->InShape);
+		m_window.draw(e->cAbbility->OutShape);
+
+	}
+
+
 	// GUI
 	m_window.draw(text_score);
 
@@ -272,24 +280,18 @@ void Game::sMovement()
 	// TODO create new function that takes tag as param 
 
 	// move objects 
-	for (auto& e : m_entities.getEntities("Enemy")) {
+	defaultMovement("Enemy");
+	defaultMovement("SmallEnemy");
+	defaultMovement("Bullet");
+	
+	for (auto& e : m_entities.getEntities("ab_Bullet")) {
 
-		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
-		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
+		e->cAbbility->InShape.move(sf::Vector2f{ e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second });
+		e->cAbbility->OutShape.move(sf::Vector2f{ e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second });
 
-	}
+		Vec2<float> temp{};
 
-	for (auto& e : m_entities.getEntities("SmallEnemy")) {
-
-		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
-		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
-
-	}
-
-	for (auto& e : m_entities.getEntities("Bullet")) {
-
-		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
-		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
+		e->cTransform->pos = temp.toVec2f(e->cAbbility->OutShape.getPosition());
 
 	}
 
@@ -431,7 +433,6 @@ void Game::sWinCollision()
 
 	}
 
-
 }
 
 void Game::sCollision()
@@ -464,10 +465,70 @@ void Game::sCollision()
 				bullet->destroy();
 				s_enemy->destroy();
 
+
 				score += s_enemy->cScore->score;
 			}
 
 		}
+
+	}
+
+	for (auto& ab_bullet : m_entities.getEntities("ab_Bullet")) {
+
+		//first check big enemies then big
+
+		for (auto& enemy : m_entities.getEntities("Enemy")) {
+
+			if (ab_bullet->cAbbility->OutShape.getGlobalBounds().intersects(enemy->cShape->shape.getGlobalBounds())) {
+
+				enemy->cTransform->speed = Vec2<float>(5.f, 5.f);
+
+				Vec2<float> dirVec = dirVec.toVec2f(ab_bullet->cAbbility->OutShape.getPosition()) - enemy->cTransform->pos;
+
+				float angle = atan2f(dirVec.getCords().first, dirVec.getCords().second);
+
+				enemy->cTransform->speed = Vec2<float>{ sin(angle) * 7.f, cos(angle) * 7.f };
+
+			}
+
+			if (ab_bullet->cAbbility->InShape.getGlobalBounds().intersects(enemy->cShape->shape.getGlobalBounds())) {
+
+				enemy->destroy();
+
+				score += enemy->cScore->score;
+
+				sSpawnAfterKill(enemy->cShape->shape.getPointCount(), enemy->cTransform->pos,
+					enemy->cShape->shape.getFillColor());
+
+			}
+
+		}
+
+		for(auto& s_enemy : m_entities.getEntities("SmallEnemy")) {
+
+			if (ab_bullet->cAbbility->OutShape.getGlobalBounds().intersects(s_enemy->cShape->shape.getGlobalBounds())) {
+
+				s_enemy->cTransform->speed = Vec2<float>(5.f, 5.f);
+
+				Vec2<float> dirVec = dirVec.toVec2f(ab_bullet->cAbbility->OutShape.getPosition()) - s_enemy->cTransform->pos;
+
+				float angle = atan2f(dirVec.getCords().first, dirVec.getCords().second);
+
+				s_enemy->cTransform->speed = Vec2<float>{ sin(angle) * 7.f, cos(angle) * 7.f };
+
+			}
+
+			if (ab_bullet->cAbbility->InShape.getGlobalBounds().intersects(s_enemy->cShape->shape.getGlobalBounds())) {
+
+				score += s_enemy->cScore->score;
+
+				s_enemy->destroy();
+
+			}
+
+		}
+
+
 
 	}
 
@@ -546,6 +607,34 @@ void Game::sShooting()
 
 	}
 
+	for (auto& player : m_entities.getEntities("Player")) {
+
+		if (m_entities.getEntities("ab_Bullet").size() < 1) {
+
+			sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+			Vec2<float> mouseVec{ (float)mousePos.x, (float)mousePos.y };
+
+			//Spawn projectile
+			auto blackHole = m_entities.addEntity("ab_Bullet");
+			blackHole->cAbbility = std::make_shared<CAbbility>(5.f, 40.f, 120.f);
+			blackHole->cTransform = std::make_shared<CTransform>(Vec2<float>{ player->cTransform->pos }, Vec2<float>{ 0, 0 }, Vec2<float>{ 1, 1 }, 0);
+			blackHole->cLifeSpan = std::make_shared<CLifespan>(5.f);
+
+			blackHole->cAbbility->InShape.setPosition(blackHole->cTransform->pos.toVector2f());
+			blackHole->cAbbility->OutShape.setPosition(sf::Vector2f{ blackHole->cTransform->pos.toVector2f() });
+
+			
+
+			Vec2<float> dirVec = mouseVec - blackHole->cTransform->pos;
+
+			float angle = atan2f(dirVec.getCords().first, dirVec.getCords().second);
+
+			blackHole->cTransform->speed = Vec2<float>{ sin(angle) * 10.f, cos(angle) * 10.f };
+
+
+		}
+
+	}
 
 }
 
@@ -555,11 +644,22 @@ void Game::sLifeSpan()
 	//minus lifespan
 	for (auto& e : m_entities.getEntities()) {
 
+
 		if (e->cLifeSpan == nullptr) {
 			continue;
 		}
 
+		if (e->cLifeSpan->elapsedTime.asSeconds() > e->cLifeSpan->totalTime) {
+			e->destroy();
+			
+		}
+
 		e->cLifeSpan->elapsedTime = e->cLifeSpan->timer.getElapsedTime();
+
+		if (e->cAbbility != nullptr) {
+			continue;
+		}
+
 		// calculate procent of lifespan passed
 		float procent =  1 - (((100 * e->cLifeSpan->elapsedTime.asSeconds()) / e->cLifeSpan->totalTime)) / 100;
 		
@@ -584,9 +684,7 @@ void Game::sLifeSpan()
 			e->cShape->shape.setOutlineThickness(outThick);
 		}
 
-		if (e->cLifeSpan->elapsedTime.asSeconds() > e->cLifeSpan->totalTime) {
-			e->destroy();
-		}
+
 
 	}
 
@@ -692,12 +790,20 @@ void Game::sImGUI()
 							pos_x = std::to_string((int)ent->cShape->shape.getPosition().x);
 							pos_y = std::to_string((int)ent->cShape->shape.getPosition().y);
 						}
-						else {
+						else if(ent->cVertexArray != nullptr){
 							pos_x = std::to_string((int)ent->cVertexArray->vertex.getBounds().getPosition().x);
 							pos_y = std::to_string((int)ent->cVertexArray->vertex.getBounds().getPosition().y);
 						}
+						else {
 
-						id_ += "\t" + ent->tag() + "\t" + "( " + pos_x + " , " + pos_y + " )\n";
+							pos_x = std::to_string((int)ent->cAbbility->InShape.getPosition().x);
+							pos_y = std::to_string((int)ent->cAbbility->InShape.getPosition().y);
+							
+						}
+
+						float lifeSpan = ent->cLifeSpan == nullptr ? 0.f : ent->cLifeSpan->elapsedTime.asSeconds();
+
+						id_ += "\t" + ent->tag() + "\t" + "( " + pos_x + " , " + pos_y + " ) " + std::to_string(lifeSpan) + " sec\n";
 
 						ImGui::Text(id_.c_str());
 
@@ -718,6 +824,23 @@ void Game::sImGUI()
 
 
 	ImGui::End();
+}
+
+void Game::sSuperPower()
+{
+
+
+
+}
+
+void Game::defaultMovement(const std::string tag_)
+{
+	for (auto& e : m_entities.getEntities(tag_)) {
+
+		e->cShape->shape.move(e->cTransform->speed.getCords().first, e->cTransform->speed.getCords().second);
+		e->cTransform->pos = Vec2{ e->cShape->shape.getPosition().x, e->cShape->shape.getPosition().y };
+
+	}
 }
 
 void Game::restart()

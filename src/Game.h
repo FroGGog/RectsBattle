@@ -5,7 +5,7 @@
 #include <imgui.h>
 #include <iostream>
 
-
+#include "Vec2.h"
 #include "EntityManager.h"
 
 class Game {
@@ -53,6 +53,9 @@ private:
 	void sLifeSpan();
 	void sUpdateScore();
 	void sImGUI();
+	void sSuperPower();
+
+	void defaultMovement(const std::string tag_);
 
 	void restart();
 

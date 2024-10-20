@@ -19,6 +19,7 @@ public:
 	std::shared_ptr<CScore> cScore;
 	std::shared_ptr<CInput> cInput;
 	std::shared_ptr<CShooting> cShooting;
+	std::shared_ptr<CAbbility> cAbbility;
 	
 	Entity(const std::string& t, const size_t i);
 

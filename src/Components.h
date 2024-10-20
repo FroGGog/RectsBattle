@@ -101,6 +101,40 @@ public:
 
 };
 
+class CAbbility {
+
+
+public:
+
+	sf::Clock timer;
+	sf::Time elapsedTime;
+
+	float reloading;
+
+	sf::CircleShape InShape;
+	sf::CircleShape OutShape;
+
+	CAbbility(float reload, float InRad, float outRad) : reloading(reload)
+	{
+		InShape.setRadius(InRad);
+		InShape.setFillColor(sf::Color::Black);
+		InShape.setOrigin(sf::Vector2f{ InShape.getPosition().x + InShape.getGlobalBounds().width / 2,
+			InShape.getPosition().y + InShape.getGlobalBounds().height / 2 });
+
+		OutShape.setRadius(outRad);
+		OutShape.setOrigin(sf::Vector2f{ OutShape.getPosition().x + OutShape.getGlobalBounds().width / 2,
+			OutShape.getPosition().y + OutShape.getGlobalBounds().height / 2 });
+		OutShape.setPosition(sf::Vector2f{ InShape.getPosition().x + InShape.getGlobalBounds().width / 2,
+			InShape.getPosition().y + InShape.getGlobalBounds().height / 2});
+		OutShape.setFillColor(sf::Color{ 128,128,128, 150});
+		
+
+	
+	};
+
+};
+
+
 class CInput {
 
 public:
