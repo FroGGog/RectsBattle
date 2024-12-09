@@ -209,7 +209,6 @@ void Game::sRender()
 	// GUI
 	m_window.draw(text_score);
 
-	ImGui::ShowDemoWindow();
 	ImGui::SFML::Render(m_window);
 
 	m_window.display();
@@ -218,7 +217,7 @@ void Game::sRender()
 
 void Game::sSpawnEnimes()
 {
-	// TODO : Fix staribg enemy speed (not it's only positive values)
+	// TODO : Fix starting enemy speed (not it's only positive values)
 
 	enemySpawner = clock.getElapsedTime();
 
